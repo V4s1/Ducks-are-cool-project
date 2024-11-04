@@ -1,0 +1,87 @@
+class Square {
+    constructor(x, y, isWally) {
+        this.x = x;
+        this.y = y;
+        this.isWally = isWally;
+        this.speedX = random(-0.1, 0.1); // Random horizontal speed
+        this.speedY = random(-0.1, 0.1); // Random vertical speed
+    }
+
+    move() {
+        // Move the square
+        if (!this.isWally) {
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            // Bounce off the edges of the grid
+            if (this.x < 0 || this.x > gridSize - 1) {
+                this.speedX *= -1;
+            }
+            if (this.y < 0 || this.y > gridSize - 1) {
+                this.speedY *= -1;
+            }
+        }
+    }
+
+    display() {
+        if (this.isWally) {
+            fill('red'); // Wally's color
+        } else {
+            fill(random(255), random(255), random(255)); // Other colors
+        }
+        rect(this.x * squareSize, this.y * squareSize, squareSize, squareSize);
+    }
+}
+
+let squares = [];
+const gridSize = 5; // 5x5 grid
+const squareSize = 100; // Size of each square
+let wallySquare;
+
+function setup() {
+    createCanvas(gridSize * squareSize, gridSize * squareSize);
+    let randomX = floor(random(gridSize));
+    let randomY = floor(random(gridSize));
+    wallySquare = new Square(randomX, randomY, true); // Create Wally
+
+    // Create other squares
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (!(i === randomX && j === randomY)) {
+                squares.push(new Square(i, j, false));
+            }
+        }
+    }
+}
+
+function draw() {
+    background(220);
+    wallySquare.display(); // Draw Wally
+    for (let square of squares) {
+        square.move(); // Move other squares
+        square.display(); // Draw other squares
+    }
+    displayMessage();
+}
+
+let gameMessage = "";
+
+function displayMessage() {
+    fill(0);
+    textSize(24);
+    textAlign(CENTER, CENTER);
+    text(gameMessage, width / 2, height - 30);
+}
+
+function mousePressed() {
+    let col = floor(mouseX / squareSize);
+    let row = floor(mouseY / squareSize);
+
+    // Check if the clicked square is Wally's
+    if (col === wallySquare.x && row === wallySquare.y) {
+        gameMessage = 'You found Wally!';
+        noLoop(); // Stop the draw loop
+    } else {
+        gameMessage = 'Try again!';
+    }
+}
