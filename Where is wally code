@@ -5,6 +5,13 @@ class Square {
         this.isWally = isWally;
         this.speedX = random(-0.01, 0.04); // Random horizontal speed
         this.speedY = random(-0.01, 0.04); // Random vertical speed
+      
+      // Randomly assign a duck image to non-Wally squares
+        if (!this.isWally) {
+            this.duckImage = random(ducks);
+        } else {
+            this.gooseImage = goose
+        }
     }
 
     move() {
@@ -25,11 +32,12 @@ class Square {
 
     display() {
         if (this.isWally) {
-            fill('red'); // Wally's color
+            // Draw the duck image at this square's location
+            image(this.gooseImage, this.x * squareSize, this.y * squareSize, squareSize, squareSize);
         } else {
-            fill('red'); // Other colors
+          // Draw the duck image at this square's location
+            image(this.duckImage, this.x * squareSize, this.y * squareSize, squareSize, squareSize);
         }
-        rect(this.x * squareSize, this.y * squareSize, squareSize, squareSize);
     }
 }
 
@@ -37,6 +45,16 @@ let squares = [];
 const gridSize = 6; // 5x5 grid
 const squareSize = 80; // Size of each square
 let wallySquare;
+let ducks = [];
+let goose
+
+// Load the image.
+function preload() {
+  ducks[0] = loadImage('/assets/Duck1.png');
+  ducks[1] = loadImage('/assets/Duck2.png');
+  ducks[2] = loadImage('/assets/Duck3.png');
+  goose = loadImage('/assets/Goose.png')
+}
 
 function setup() {
     createCanvas(gridSize * squareSize, gridSize * squareSize);
@@ -55,7 +73,7 @@ function setup() {
 }
 
 function draw() {
-    background(10);
+    background(255, 255, 255, 50);
     wallySquare.display(); // Draw Wally
     for (let square of squares) {
         square.move(); // Move other squares
