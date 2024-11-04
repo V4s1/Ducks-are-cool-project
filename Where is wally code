@@ -3,8 +3,8 @@ class Square {
         this.x = x;
         this.y = y;
         this.isWally = isWally;
-        this.speedX = random(-0.1, 0.1); // Random horizontal speed
-        this.speedY = random(-0.1, 0.1); // Random vertical speed
+        this.speedX = random(-0.01, 0.04); // Random horizontal speed
+        this.speedY = random(-0.01, 0.04); // Random vertical speed
     }
 
     move() {
@@ -27,7 +27,7 @@ class Square {
         if (this.isWally) {
             fill('red'); // Wally's color
         } else {
-            fill(random(255), random(255), random(255)); // Other colors
+            fill('red'); // Other colors
         }
         rect(this.x * squareSize, this.y * squareSize, squareSize, squareSize);
     }
@@ -55,7 +55,7 @@ function setup() {
 }
 
 function draw() {
-    background(220);
+    background(10);
     wallySquare.display(); // Draw Wally
     for (let square of squares) {
         square.move(); // Move other squares
