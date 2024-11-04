@@ -34,8 +34,8 @@ class Square {
 }
 
 let squares = [];
-const gridSize = 5; // 5x5 grid
-const squareSize = 100; // Size of each square
+const gridSize = 6; // 5x5 grid
+const squareSize = 80; // Size of each square
 let wallySquare;
 
 function setup() {
@@ -67,7 +67,7 @@ function draw() {
 let gameMessage = "";
 
 function displayMessage() {
-    fill(0);
+    fill(255, 255, 255);
     textSize(24);
     textAlign(CENTER, CENTER);
     text(gameMessage, width / 2, height - 30);
