@@ -40,6 +40,18 @@ class Bird {
             image(this.duckImage, this.x * birdSize, this.y * birdSize, birdSize, birdSize);
         }
     }
+    // React to incorrect clicks
+    reactToIncorrectClick() {
+        if (this.isWally) {
+            this.isHidden = true; // Hide Wally briefly
+            setTimeout(() => {
+                // Move Wally to a new location and make him visible again
+                this.x = floor(random(gridSize));
+                this.y = floor(random(gridSize));
+                this.isHidden = false;
+            }, 1000); // Hide for 1 second
+        }
+    }
 }
 
 let birds = [];
@@ -80,7 +92,7 @@ function setup() {
             }
         }
     }
-  changeColour()
+    changeColour()
     playQuack(); // Start the quack sound with random   intervals
 }
 
@@ -126,6 +138,8 @@ function mousePressed() {
     // Check if the mouse is within the pixel boundaries of wallySquare
     if (mouseX >= wallyLeft && mouseX < wallyRight && mouseY >= wallyTop && mouseY < wallyBottom)  {
         gameState = 2;
+    }else {
+        wallySquare.reactToIncorrectClick(); // Wally reacts if incorrect
     }
 }
 
