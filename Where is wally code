@@ -1,10 +1,10 @@
-class Square {
+class Bird {
     constructor(x, y, isWally) {
         this.x = x;
         this.y = y;
         this.isWally = isWally;
-        this.speedX = random(-0.01, 0.04); // Random horizontal speed
-        this.speedY = random(-0.01, 0.04); // Random vertical speed
+        this.speedX = random(-(0.01 * speedMultiplyer), 0.04 * speedMultiplyer); // Random horizontal speed
+        this.speedY = random(-(0.01 * speedMultiplyer), 0.04 * speedMultiplyer); // Random vertical speed
       
       // Randomly assign a duck image to non-Wally squares
         if (!this.isWally) {
@@ -16,7 +16,7 @@ class Square {
 
     move() {
         // Move the square
-        if (!this.isWally) {
+        //if (!this.isWally) {
             this.x += this.speedX;
             this.y += this.speedY;
 
@@ -27,79 +27,208 @@ class Square {
             if (this.y < 0 || this.y > gridSize - 1) {
                 this.speedY *= -1;
             }
-        }
+        //}
     }
 
     display() {
         if (this.isWally) {
             // Draw the duck image at this square's location
-            image(this.gooseImage, this.x * squareSize, this.y * squareSize, squareSize, squareSize);
+            image(this.gooseImage, this.x * birdSize, this.y * birdSize, birdSize * 0.75, birdSize * 0.75);
         } else {
+          
           // Draw the duck image at this square's location
-            image(this.duckImage, this.x * squareSize, this.y * squareSize, squareSize, squareSize);
+            image(this.duckImage, this.x * birdSize, this.y * birdSize, birdSize, birdSize);
+        }
+    }
+    // React to incorrect clicks
+    setRandomPosition() {
+        if (this.isWally) {
+            this.isHidden = true; // Hide Wally briefly
+            setTimeout(() => {
+                // Move Wally to a new location and make him visible again
+                this.x = floor(random(gridSize));
+                this.y = floor(random(gridSize));
+                this.isHidden = false;
+            }, 1000); // Hide for 1 second
         }
     }
 }
 
-let squares = [];
+let birds = [];
 const gridSize = 6; // 5x5 grid
-const squareSize = 80; // Size of each square
+const birdSize = 80; // Size of each square
 let wallySquare;
 let ducks = [];
 let goose
+let backgroundImg
+let quack
+let gameState = 0
+let speedMultiplyer = 1
+
+let handPose;
+let video;
+let hands = [];
+let camCapture = true;
 
 // Load the image.
 function preload() {
-  ducks[0] = loadImage('/assets/Duck1.png');
-  ducks[1] = loadImage('/assets/Duck2.png');
-  ducks[2] = loadImage('/assets/Duck3.png');
-  goose = loadImage('/assets/Goose.png')
+  ducks[0] = loadImage('/assets/D1.png');
+  ducks[1] = loadImage('/assets/D2.png');
+  ducks[2] = loadImage('/assets/D3.png');
+  ducks[3] = loadImage('/assets/D4.png');
+  goose = loadImage('/assets/RD.png')
+  
+  quack = loadSound('/assets/Quack.mp3')
+  
+  backgroundImage = loadImage('/assets/Farm.jpg')
+  
+  handPose = ml5.handPose();
 }
 
 function setup() {
-    createCanvas(gridSize * squareSize, gridSize * squareSize);
+    createCanvas(gridSize * birdSize, gridSize * birdSize);
     let randomX = floor(random(gridSize));
     let randomY = floor(random(gridSize));
-    wallySquare = new Square(randomX, randomY, true); // Create Wally
-
+    wallySquare = new Bird(randomX, randomY, true); // Create Wally
+    birds.push(wallySquare);
+  // Create the webcam video and hide it
+  if (camCapture == true){
+    video = createCapture(VIDEO);
+    video.size(640, 480);
+    video.hide();
+  // Start detecting hands from the webcam video
+    handPose.detectStart(video, gotHands);
+  } else {
+    video.play()
+    camCapture = true
+  }
     // Create other squares
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             if (!(i === randomX && j === randomY)) {
-                squares.push(new Square(i, j, false));
+                birds.push(new Bird(i, j, false));
             }
+        }
+    }
+    //changeColour()
+    playQuack(); // Start the quack sound with random   intervals
+}
+
+function draw() {
+    background(backgroundImage);
+    
+    if (gameState == 1) {
+      wallySquare.display(); // Draw Wally
+      for (let bird of birds) {
+          bird.move(); // Move other squares
+          bird.display(); // Draw other squares
+      }
+      
+      for (let i = 0; i < hands.length; i++) {
+        let hand = hands[i];
+
+        // Track the index finger tip (keypoint 8) for pointing
+        let indexFingerTip = hand.keypoints[8];
+        if (indexFingerTip) {
+          let invertedX = width - indexFingerTip.x;
+          // Draw a larger, distinct circle at the fingertip to highlight it
+          fill(255, 0, 0);
+          noStroke();
+          circle(invertedX, indexFingerTip.y, 15);
+        
+          // Check if the inverted fingertip coordinates are within Wally's boundaries
+          let wallyLeft = wallySquare.x * birdSize;
+          let wallyRight = wallyLeft + birdSize;
+          let wallyTop = wallySquare.y * birdSize;
+          let wallyBottom = wallyTop + birdSize;
+
+          if (invertedX >= wallyLeft && invertedX < wallyRight && 
+              indexFingerTip.y >= wallyTop && indexFingerTip.y < wallyBottom) {
+              gameState = 2; // Set game state to win
+          }
+        }
+      }
+    } else if (gameState === 2) {
+      textSize(24);
+      textAlign(CENTER, CENTER);
+      fill('white');
+      rect((width / 2) - 230, (height / 2) - 50, 460, 100, 20);
+      fill('black');
+      text('You found Wally! Press ENTER to restart', width / 2, height / 2);
+    } else {
+      textSize(24);
+      textAlign(CENTER, CENTER);
+      fill('white');
+      rect((width / 2) - 200, (height / 2) - 50, 400, 100, 20);
+      fill('black');
+      text('Press ENTER to start game', width / 2, height / 2);
+    }
+}
+
+function mousePressed() {
+    // Calculate the pixel boundaries of wallySquare
+    let wallyLeft = wallySquare.x * birdSize;
+    let wallyRight = wallyLeft + birdSize;
+    let wallyTop = wallySquare.y * birdSize;
+    let wallyBottom = wallyTop + birdSize;
+
+    // Check if the mouse is within the pixel boundaries of wallySquare
+    if (mouseX >= wallyLeft && mouseX < wallyRight && mouseY >= wallyTop && mouseY < wallyBottom)  {
+        gameState = 2;
+    }else {
+        wallySquare.setRandomPosition(); // Wally reacts if incorrect
+    }
+}
+
+function keyPressed() {
+  if (keyCode === ENTER) {
+        if (gameState === 0) {
+            // If the game hasn't started yet, start the game
+            gameState = 1;
+        } else if (gameState === 2) {
+            // If the game is over (Wally was found), restart the game
+            gameState = 1;
+            video.stop()
+            camCapture = false
+            birds = []
+            speedMultiplyer += 0.125
+            setup()
+            loop(); // Resume the draw loop
+            gameMessage = ''; // Clear the message
         }
     }
 }
 
-function draw() {
-    background(255, 255, 255, 50);
-    wallySquare.display(); // Draw Wally
-    for (let square of squares) {
-        square.move(); // Move other squares
-        square.display(); // Draw other squares
-    }
-    displayMessage();
+function touchEnded(){
+  if (gameState === 0) {
+            gameState = 1;
+        } else if (gameState === 2) {
+            gameState = 1;
+            video.stop()
+            camCapture = false
+            birds = []
+            setup()
+            loop(); // Resume the draw loop
+            gameMessage = ''; // Clear the message
+        }
 }
 
-let gameMessage = "";
-
-function displayMessage() {
-    fill(255, 255, 255);
-    textSize(24);
-    textAlign(CENTER, CENTER);
-    text(gameMessage, width / 2, height - 30);
+function changeColour(){
+  tint(random(255),random(255),random(255));
+  let interval = 1000; // Random time between 10,000 ms (10 seconds) and 20,000 ms (20 seconds)
+    setTimeout(changeColour, interval);
 }
 
-function mousePressed() {
-    let col = floor(mouseX / squareSize);
-    let row = floor(mouseY / squareSize);
+function playQuack() {
+  // Play the quack sound
+    quack.play();
+    // Schedule the next quack to play in a random interval between 10 and 20 seconds
+    let interval = random(1000, 2000); // Random time between 10,000 ms (10 seconds) and 20,000 ms (20 seconds)
+    setTimeout(playQuack, interval);
+}
 
-    // Check if the clicked square is Wally's
-    if (col === wallySquare.x && row === wallySquare.y) {
-        gameMessage = 'You found Wally!';
-        noLoop(); // Stop the draw loop
-    } else {
-        gameMessage = 'Try again!';
-    }
+// Callback function for when handPose outputs data
+function gotHands(results) {
+  // Save the output to the hands variable
+  hands = results;
 }
